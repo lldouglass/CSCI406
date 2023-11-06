@@ -1,0 +1,317 @@
+3 2 3 2 1 2 2 2
+ES WS
+N NS
+E NW
+
+# import sys
+# import networkx as nx
+# from networkx.drawing.nx_agraph import write_dot # function to create dot file of graph
+
+# # point class - store x and y
+# class Point:
+#     # constructor - set x and y
+#     def __init__(self, x, y):
+#         self.x = x
+#         self.y = y
+
+#     # override equals - return true if points have same x and y
+#     def __eq__(self, other):
+#         return self.x == other.x and self.y == other.y
+    
+#     # override hash - hash is determined based off point x and y
+#     def __hash__(self):
+#         return hash((self.x, self.y))
+    
+#     # override string - print x and y intead of object memory address
+#     def __str__(self):
+#         return f"({self.x}, {self.y})"
+
+# # state class - store minotaur and theseus locations as points
+# class State:
+#     # constructor - set theseous and minotaur points
+#     def __init__(self, theseus, minotaur):
+#         self.theseus = theseus
+#         self.minotaur = minotaur
+ 
+#     # override equals - return true if theseus and minotaur are in the same positions
+#     def __eq__(self, other):
+#         return self.theseus == other.theseus and self.minotaur == other.minotaur
+    
+#     # override hash - create hash based on theseous and minotaur location - avoids duplicates when adding edges
+#     def __hash__(self):
+#         return hash((self.theseus, self.minotaur))
+    
+#     # override string - print theseus and minotaur intead of object memory address
+#     def __str__(self):
+#         return f"T: {self.theseus}, M: {self.minotaur}"
+
+# # read input file and initialize variables
+# def readFile(fileName):
+#     # open file
+#     with open(fileName, "r") as file:
+#         # read first line and split into list for processing
+#         inputs = (file.readline()).split()
+#         # get grid size
+#         numRows = int(inputs[0])
+#         numCols = int(inputs[1])
+#         # get initial positions - subtract one from each index since python is 0 indexed and example is 1 indexed
+#         theseus = Point(int(inputs[2]) - 1, int(inputs[3]) - 1) 
+#         minotaur = Point(int(inputs[4]) - 1, int(inputs[5]) - 1)
+#         final = Point(int(inputs[6]) - 1, int(inputs[7]) - 1)
+#         # get grid of direction strings
+#         grid = []
+#         for i in range(numRows):
+#             cols = (file.readline()).split()
+#             grid.append(cols)
+#         return numRows, numCols, minotaur, theseus, final, grid
+
+# # create graph and add vertice for each possible game state
+# def add_vertices(rows, cols):
+#     # create directed graph
+#     graph = nx.DiGraph()
+#     # add vertices
+#     for theseusX in range(rows):
+#         for theseusY in range(cols):
+#             for minotaurX in range(rows):
+#                 for minotaurY in range(cols):
+#                     graph.add_node(State(Point(theseusX, theseusY), Point(minotaurX, minotaurY)))
+#     return graph
+
+# # move minitour based on valid moves and theseus position
+# def move_minotaur(theseus, minotaur, grid):
+#     # get valid moves(cardinal directions) from that square
+#     valid = grid[minotaur.x][minotaur.y]
+#     # first try to move horiontally
+#     # if theseus is east and minotaur can move east, move east
+#     if theseus.y > minotaur.y and 'E' in valid: 
+#         newMinotaur = Point(minotaur.x, minotaur.y + 1)
+#     # if theseus is west and minotaur can move west, move west
+#     elif theseus.y < minotaur.y and 'W' in valid: 
+#         newMinotaur = Point(minotaur.x, minotaur.y - 1)
+#     # then try to move vertically
+#     # if theseus is south and minotaur can move south, move south
+#     elif theseus.x > minotaur.x and 'S' in valid: 
+#         newMinotaur = Point(minotaur.x + 1, minotaur.y)
+#     # if theseus is north and minotaur can move north, move north
+#     elif theseus.x < minotaur.x and 'N' in valid: 
+#         newMinotaur = Point(minotaur.x - 1, minotaur.y)
+#     # otherwise stay still
+#     else:
+#         newMinotaur = minotaur
+#     # return updated minotaur location
+#     return newMinotaur
+
+# # iterate through vertices of graph and create outgoing edges from each vertex
+# def add_edges(final, grid, graph, win):
+#     # copy graph so that we do not modify the original
+#     newGraph = graph.copy()
+#     # iterate through each vertice and add all of its edges
+#     for vertex in graph:
+#         theseus = vertex.theseus
+#         minotaur = vertex.minotaur
+#         # get valid moves(cardinal directions) from that square
+#         valid = grid[theseus.x][theseus.y]
+#         # if theseus won, add edge to the 'win' node
+#         if theseus == final and minotaur != final:
+#             newGraph.add_edge(vertex, win)
+#             continue
+#         # theseus stays still
+#         newTheseus = theseus
+#         newMinotaur = move_minotaur(newTheseus, minotaur, grid)
+#         newMinotaur = move_minotaur(newTheseus, newMinotaur, grid)
+#         newGraph.add_edge(vertex, State(newTheseus, newMinotaur))
+#         # theseus moves north
+#         if 'N' in valid:
+#             newTheseus = Point(theseus.x - 1, theseus.y)
+#             newMinotaur = move_minotaur(newTheseus, minotaur, grid)
+#             newMinotaur = move_minotaur(newTheseus, newMinotaur, grid)
+#             newGraph.add_edge(vertex, State(newTheseus, newMinotaur))
+#         # theseus moves east
+#         if 'E' in valid:
+#             newTheseus = Point(theseus.x, theseus.y + 1)
+#             newMinotaur = move_minotaur(newTheseus, minotaur, grid)
+#             newMinotaur = move_minotaur(newTheseus, newMinotaur, grid)
+#             newGraph.add_edge(vertex, State(newTheseus, newMinotaur))
+#         # theseus moves south
+#         if 'S' in valid:
+#             newTheseus = Point(theseus.x + 1, theseus.y)
+#             newMinotaur = move_minotaur(newTheseus, minotaur, grid)
+#             newMinotaur = move_minotaur(newTheseus, newMinotaur, grid)
+#             newGraph.add_edge(vertex, State(newTheseus, newMinotaur))
+#         # theseus moves west
+#         if 'W' in valid:
+#             newTheseus = Point(theseus.x, theseus.y - 1)
+#             newMinotaur = move_minotaur(newTheseus, minotaur, grid)
+#             newMinotaur = move_minotaur(newTheseus, newMinotaur, grid)
+#             newGraph.add_edge(vertex, State(newTheseus, newMinotaur))
+#     return newGraph
+
+# # get the shortest path from 'initial' vertex to 'win' vertex if it exists
+# def get_path(graph, initial, win):
+#     # find all of the paths from initial to win
+#     try:
+#         pathsCoords = list(nx.all_shortest_paths(graph, source=initial, target=win))
+#     # if there is no path from initial to win, print "NO PATH"
+#     except:
+#         return "NO PATH"
+    
+#     # convert the path from sequence of coordinates to sequence of directions
+#     paths = []
+#     for pathCoords in pathsCoords:
+#         path = []
+#         # loop though though coordinates - skip the 'initial' and the 'win' nodes
+#         # get cardinal direction based on the change in pos between current coords and last coords
+#         for i in range(1, len(pathCoords) - 1):
+#             currTheseus = pathCoords[i].theseus
+#             lastTheseus = pathCoords[i-1].theseus
+#             # theseous moved north
+#             if (currTheseus.x - lastTheseus.x) == -1:
+#                 path.append('N')
+#             # theseous moved south
+#             elif (currTheseus.x - lastTheseus.x) == 1:
+#                 path.append('S')
+#             # theseous moved west
+#             elif (currTheseus.y - lastTheseus.y) == -1:
+#                 path.append('W')
+#             # theseous moved east
+#             elif (currTheseus.y - lastTheseus.y) == 1:
+#                 path.append('E')
+#             # theseous stayed still
+#             else:
+#                 path.append('X')
+#         paths.append(' '.join(path))
+    
+#     # sort the list of move sequences lexicographically
+#     paths.sort()
+#     # return  the lexicographically first path
+#     return paths[0]
+
+# def main():
+#     # read input file and set variables
+#     try:
+#         fileName = sys.argv[1]
+#     except:
+#         fileName = "input.txt"
+#     rows, cols, minotaur, theseus, final, grid = readFile(fileName)
+#     # create graph and set vertices
+#     graph = add_vertices(rows, cols)
+#     # add edges to the graph
+#     win = State(Point(-1, -1), Point(-1, -1))
+#     graph = add_edges(final, grid, graph, win)
+#     # run bfs
+#     initial = State(theseus, minotaur)
+#     # process results from bfs
+#     path = get_path(graph, initial, win)
+#     # print answer
+#     print(path)
+    
+#     # draw the graph using matplotlib and save to image "graph_vis.png" # uncomment to draw graph
+#     #write_dot(graph, "graph.dot")
+
+# # main function
+# if __name__ == "__main__":
+#     main()
+
+# import sys
+# import networkx as nx
+# from networkx.drawing.nx_agraph import write_dot 
+
+# def read_input_data(file_path):
+#     with open(file_path, "r") as file:
+#         lines = file.readlines()
+#         # Extracting necessary data from the header line
+#         header_values = lines[0].split()
+#         row_count = int(header_values[0])
+#         column_count = int(header_values[1])
+#         theseus_pos = (int(header_values[2]) - 1, int(header_values[3]) - 1)
+#         minotaur_pos = (int(header_values[4]) - 1, int(header_values[5]) - 1)
+#         exit_point = (int(header_values[6]) - 1, int(header_values[7]) - 1)
+#         # Constructing the labyrinth matrix
+#         labyrinth_matrix = [line.split() for line in lines[1:row_count+1]]
+#         return row_count, column_count, minotaur_pos, theseus_pos, exit_point, labyrinth_matrix
+
+
+
+# def calculate_minotaur_next_position(theseus_pos, minotaur_pos, labyrinth_matrix):
+#     valid_moves = labyrinth_matrix[minotaur_pos[0]][minotaur_pos[1]]
+#     # Identifying potential new positions for the Minotaur based on the current state
+#     directional_conditions = [
+#         (theseus_pos[1] > minotaur_pos[1] and 'E' in valid_moves, (minotaur_pos[0], minotaur_pos[1] + 1)),
+#         (theseus_pos[1] < minotaur_pos[1] and 'W' in valid_moves, (minotaur_pos[0], minotaur_pos[1] - 1)),
+#         (theseus_pos[0] > minotaur_pos[0] and 'S' in valid_moves, (minotaur_pos[0] + 1, minotaur_pos[1])),
+#         (theseus_pos[0] < minotaur_pos[0] and 'N' in valid_moves, (minotaur_pos[0] - 1, minotaur_pos[1])),
+#     ]
+#     for condition, new_position in directional_conditions:
+#         if condition:
+#             return new_position
+#     return minotaur_pos
+
+# def create_vertices(row_count, column_count):
+#     graph = nx.DiGraph()
+#     for theseus_x in range(row_count):
+#         for theseus_y in range(column_count):
+#             for minotaur_x in range(row_count):
+#                 for minotaur_y in range(column_count):
+#                     graph.add_node(((theseus_x, theseus_y), (minotaur_x, minotaur_y)))
+#     return graph
+
+# def identify_shortest_path(graph, initial_state, win_state):
+#     try:
+#         all_shortest_paths = list(nx.identify_shortest_paths(graph, source=initial_state, target=win_state))
+#     except:
+#         return "NO PATH"
+#     all_shortest_paths = list(nx.all_shortest_paths(graph, source=initial_state, target=win_state))
+    
+#     # Mapping direction delta to direction letters for constructing the path string
+#     direction_mappings = {(-1, 0): 'N', (0, 1): 'E', (1, 0): 'S', (0, -1): 'W', (0, 0): 'X'}
+#     paths = []
+#     for path_coords in all_shortest_paths:
+#         path = []
+#         for i in range(1, len(path_coords) - 1):
+#             delta = (path_coords[i][0][0] - path_coords[i-1][0][0], path_coords[i][0][1] - path_coords[i-1][0][1])
+#             direction = direction_mappings[delta]
+#             path.append(direction)
+#         paths.append(' '.join(path))
+#     paths.sort()
+#     return paths[0]
+
+
+# def connect_graph_states(exit_point, labyrinth_matrix, graph, win_state):
+#     graph_updated = graph.copy()
+#     for node in graph:
+#         theseus_pos, minotaur_pos = node
+#         valid_moves = labyrinth_matrix[theseus_pos[0]][theseus_pos[1]]
+        
+#         if theseus_pos == exit_point and minotaur_pos != exit_point:
+#             graph_updated.add_edge(node, win_state)
+#             continue
+        
+#         move_directions = [(-1, 0, 'N'), (0, 1, 'E'), (1, 0, 'S'), (0, -1, 'W')]
+#         new_theseus_pos = theseus_pos
+#         new_minotaur_pos = calculate_minotaur_next_position(theseus_pos, minotaur_pos, labyrinth_matrix)
+#         new_minotaur_pos = calculate_minotaur_next_position(theseus_pos, new_minotaur_pos, labyrinth_matrix)
+#         graph_updated.add_edge(node, (new_theseus_pos, new_minotaur_pos))
+        
+#         for dx, dy, move in move_directions:
+#             if move in valid_moves:
+#                 new_theseus_pos = (theseus_pos[0] + dx, theseus_pos[1] + dy)
+#                 new_minotaur_pos = calculate_minotaur_next_position(new_theseus_pos, minotaur_pos, labyrinth_matrix)
+#                 new_minotaur_pos = calculate_minotaur_next_position(new_theseus_pos, new_minotaur_pos, labyrinth_matrix)
+#                 graph_updated.add_edge(node, (new_theseus_pos, new_minotaur_pos))
+#     return graph_updated
+
+# def main():
+#     input_file_path = "input.txt"
+#     if len(sys.argv) > 1:
+#         input_file_path = sys.argv[1]
+#     # Reading input data and setting up the initial state
+#     row_count, column_count, minotaur_pos, theseus_pos, exit_point, labyrinth_matrix = read_input_data(input_file_path)
+#     labyrinth_graph = create_vertices(row_count, column_count)
+#     win_state = ((-1, -1), (-1, -1))
+#     labyrinth_graph = connect_graph_states(exit_point, labyrinth_matrix, labyrinth_graph, win_state)
+#     initial_state = (theseus_pos, minotaur_pos)
+#     solution_path = identify_shortest_path(labyrinth_graph, initial_state, win_state)
+#     print(solution_path)
+#     #write_dot(labyrinth_graph, "graph.dot")
+# if __name__ == "__main__":
+#     main()
